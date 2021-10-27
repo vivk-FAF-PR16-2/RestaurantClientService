@@ -1,3 +1,10 @@
 {
+	"food_ordering_addr": "food_ordering_addr:50000",
 
+	"max_priority": 5,
+
+	"min_order_items": 0,
+	"max_order_items": 4,
+
+	"max_wait_mult": 1.7
 }
