@@ -3,6 +3,7 @@ package application
 import (
 	"context"
 	"github.com/gin-gonic/gin"
+	"github.com/vivk-FAF-PR16-2/RestaurantDinnerHall/internal/infrastucture/config"
 	"github.com/vivk-FAF-PR16-2/RestaurantDinnerHall/internal/service"
 	"github.com/vivk-FAF-PR16-2/RestaurantDinnerHall/internal/service/clientcontroller"
 	"log"
@@ -23,6 +24,7 @@ func New(ctx context.Context) IApp {
 	router := gin.New()
 
 	clientService := clientcontroller.NewService(ctx)
+	config.Load()
 
 	return &clientApp{
 		server: &http.Server{
