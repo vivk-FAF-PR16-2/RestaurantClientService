@@ -10,19 +10,21 @@ import (
 )
 
 type IClient interface {
+	GetReadyStatus() bool
 	Update()
 }
 
 type client struct {
-	id     int
-	status bool
+	id    int
+	ready bool
 
 	threads []IThread
 }
 
 func NewClient(id int) IClient {
 	c := &client{
-		id: id,
+		id:    id,
+		ready: false,
 	}
 
 	c.order()
@@ -30,6 +32,10 @@ func NewClient(id int) IClient {
 }
 
 func (c *client) Update() {
+	if c.ready {
+		return
+	}
+
 	max := len(c.threads)
 	count := 0
 	for _, thread := range c.threads {
@@ -40,8 +46,12 @@ func (c *client) Update() {
 	}
 
 	if max == count {
-		// TODO: Finish...
+		c.ready = true
 	}
+}
+
+func (c client) GetReadyStatus() bool {
+	return c.ready
 }
 
 func (c *client) order() {
