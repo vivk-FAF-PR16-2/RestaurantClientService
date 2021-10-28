@@ -8,5 +8,7 @@
 	"min_order_items": 0,
 	"max_order_items": 4,
 
-	"max_wait_mult": 1.7
+	"max_wait_mult": 1.7,
+
+	"time_unit_mult": 100
 }
