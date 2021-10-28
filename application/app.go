@@ -23,8 +23,8 @@ type clientApp struct {
 func New(ctx context.Context) IApp {
 	router := gin.New()
 
-	clientService := clientcontroller.NewService(ctx)
 	config.Load()
+	clientService := clientcontroller.NewService(ctx)
 
 	return &clientApp{
 		server: &http.Server{
