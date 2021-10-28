@@ -1,8 +1,12 @@
 package client
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/spf13/viper"
 	"github.com/vivk-FAF-PR16-2/RestaurantDinnerHall/internal/domain/dto"
+	"github.com/vivk-FAF-PR16-2/RestaurantDinnerHall/internal/http/sendrequest"
+	"log"
 	"time"
 )
 
@@ -38,8 +42,15 @@ func (t *orderThread) GetReadyStatus() bool {
 }
 
 func (t *orderThread) Reset() {
-	// TODO: Get order by HTTP request by `addr` and `id`
-	order := dto.OrderStatusData{}
+	var order dto.OrderStatusData
+
+	addrOrderStatus := fmt.Sprintf("http://%s/v2/order/%d", t.addr, t.id)
+	responseOrderStatus := sendrequest.Get(addrOrderStatus, nil)
+	err := json.NewDecoder(responseOrderStatus.Body).Decode(&order)
+	if err != nil {
+		log.Fatalf("error: %v", err)
+	}
+
 	if !order.IsReady {
 		t.ready = false
 		t.order = order
