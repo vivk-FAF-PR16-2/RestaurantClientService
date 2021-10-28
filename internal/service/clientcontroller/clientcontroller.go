@@ -2,6 +2,7 @@ package clientcontroller
 
 import (
 	"context"
+	"github.com/spf13/viper"
 	"github.com/vivk-FAF-PR16-2/RestaurantDinnerHall/internal/infrastucture/client"
 	"github.com/vivk-FAF-PR16-2/RestaurantDinnerHall/internal/infrastucture/idprovider"
 	"github.com/vivk-FAF-PR16-2/RestaurantDinnerHall/internal/service"
@@ -21,8 +22,7 @@ func NewService(ctx context.Context) service.IService {
 }
 
 func (s *clientControllerService) Start(ctx context.Context) {
-
-	count := 3 // TODO: Add value in config file
+	count := viper.GetInt("client_count")
 
 	s.clients = make([]client.IClient, count)
 	for i := 0; i < count; i++ {

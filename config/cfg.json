@@ -1,6 +1,8 @@
 {
 	"food_ordering_addr": "food_ordering_addr:50000",
 
+	"client_count": 3,
+
 	"max_priority": 5,
 
 	"min_order_items": 0,
