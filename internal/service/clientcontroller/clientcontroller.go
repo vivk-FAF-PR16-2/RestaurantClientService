@@ -24,9 +24,9 @@ func NewService(ctx context.Context) service.IService {
 func (s *clientControllerService) Start(ctx context.Context) {
 	count := viper.GetInt("client_count")
 
+	s.provider = idprovider.NewProvider()
 	s.clients = make([]client.IClient, count)
 	for i := 0; i < count; i++ {
-		s.provider = idprovider.NewProvider()
 		id := s.provider.Get()
 		s.clients[i] = client.NewClient(id)
 	}
