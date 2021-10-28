@@ -1,6 +1,7 @@
 package client
 
 import (
+	"github.com/spf13/viper"
 	"github.com/vivk-FAF-PR16-2/RestaurantDinnerHall/internal/domain/dto"
 	"time"
 )
@@ -50,8 +51,8 @@ func (t *orderThread) Reset() {
 }
 
 func (t *orderThread) Calculate() {
-	// TODO: Get `timeUnit` from config
-	timeUnit := time.Millisecond * 100
+	mult := viper.GetInt("time_unit_mult")
+	timeUnit := time.Millisecond * time.Duration(mult)
 
 	timeValue := time.Duration(t.order.EstimatedWaitingTime)
 
