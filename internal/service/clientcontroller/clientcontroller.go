@@ -2,13 +2,16 @@ package clientcontroller
 
 import (
 	"context"
+	"github.com/spf13/viper"
 	"github.com/vivk-FAF-PR16-2/RestaurantDinnerHall/internal/infrastucture/client"
+	"github.com/vivk-FAF-PR16-2/RestaurantDinnerHall/internal/infrastucture/idprovider"
 	"github.com/vivk-FAF-PR16-2/RestaurantDinnerHall/internal/service"
 	"log"
 )
 
 type clientControllerService struct {
-	clients []client.IClient
+	clients  []client.IClient
+	provider idprovider.IProvider
 }
 
 func NewService(ctx context.Context) service.IService {
@@ -19,24 +22,37 @@ func NewService(ctx context.Context) service.IService {
 }
 
 func (s *clientControllerService) Start(ctx context.Context) {
+	count := viper.GetInt("client_count")
 
-	count := 3 // TODO: Add value in config file
-
+	s.provider = idprovider.NewProvider()
 	s.clients = make([]client.IClient, count)
 	for i := 0; i < count; i++ {
-		s.clients[i] = client.NewClient(i)
+		id := s.provider.Get()
+		s.clients[i] = client.NewClient(id)
 	}
 
-	go s.update(ctx)
+	loop := func() {
+		for {
+			s.update(ctx)
+		}
+	}
+
+	go loop()
 }
 
 func (s *clientControllerService) update(ctx context.Context) {
-	for {
+	for i := range s.clients {
+		s.clients[i].Update()
 
-		select {
-		case <-ctx.Done():
-			log.Println("Stopping service listening")
-			return
+		if s.clients[i].GetReadyStatus() {
+			id := s.provider.Get()
+			s.clients[i] = client.NewClient(id)
 		}
+	}
+
+	select {
+	case <-ctx.Done():
+		log.Println("Stopping service listening")
+		return
 	}
 }

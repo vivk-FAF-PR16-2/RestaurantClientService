@@ -1,66 +1,87 @@
 package client
 
 import (
-	"github.com/vivk-FAF-PR16-2/RestaurantDinnerHall/internal/infrastucture/random"
-	"time"
+	"encoding/json"
+	"fmt"
+	"github.com/spf13/viper"
+	"github.com/vivk-FAF-PR16-2/RestaurantDinnerHall/internal/domain/dto"
+	"github.com/vivk-FAF-PR16-2/RestaurantDinnerHall/internal/http/sendrequest"
+	"log"
 )
 
 type IClient interface {
+	GetReadyStatus() bool
 	Update()
 }
 
 type client struct {
-	id     int
-	status bool
+	id    int
+	ready bool
 
-	timer <-chan time.Time
+	threads []IThread
 }
 
 func NewClient(id int) IClient {
 	c := &client{
-		id: id,
+		id:    id,
+		ready: false,
 	}
 
-	c.changeState(false)
+	c.order()
 	return c
 }
 
 func (c *client) Update() {
-	select {
-	case <-c.timer:
-		if c.status {
-
-		} else {
-			c.changeState(!c.status)
-		}
+	if c.ready {
 		return
 	}
-}
 
-func (c *client) changeState(status bool) {
-	c.status = status
-	if c.status {
-		c.free()
-	} else {
-		c.order()
+	max := len(c.threads)
+	count := 0
+	for _, thread := range c.threads {
+		thread.Update()
+		if thread.GetReadyStatus() {
+			count++
+		}
+	}
+
+	if max == count {
+		c.ready = true
 	}
 }
 
-func (c *client) free() {
-	// TODO: Change source of `min` and `max` and `timeUnit` values to config
-	min := 2
-	max := 4
-
-	timeUnit := time.Millisecond * 100
-
-	timeValue := time.Duration(random.Range(min, max)) * timeUnit
-	c.timer = time.After(timeValue)
+func (c client) GetReadyStatus() bool {
+	return c.ready
 }
 
 func (c *client) order() {
-	// TODO: Get menu from food ordering
+	addr := viper.GetString("food_ordering_addr")
+	addrMenu := fmt.Sprintf("http://%s/menu", addr)
+	responseMenu := sendrequest.Get(addrMenu, nil)
 
-	// TODO: Generate and send `order` to food ordering
+	var menu dto.MenuData
+	err := json.NewDecoder(responseMenu.Body).Decode(&menu)
+	if err != nil {
+		log.Fatalf("error: %v", err)
+	}
 
-	// TODO: Get `order` info and wait
+	clientData := GenerateOrder(c.id, menu)
+	jsonData, err := json.Marshal(clientData)
+	if err != nil {
+		log.Fatalf("error: %v", err)
+	}
+
+	addrOrder := fmt.Sprintf("http://%s/order", addr)
+	responseOrder := sendrequest.Post(addrOrder, jsonData)
+
+	var responseData dto.ClientOutData
+	err = json.NewDecoder(responseOrder.Body).Decode(&responseData)
+	if err != nil {
+		log.Fatalf("error: %v", err)
+	}
+
+	c.threads = make([]IThread, len(responseData.Orders))
+	for i, order := range responseData.Orders {
+		c.threads[i] = NewThread(order)
+	}
 }
